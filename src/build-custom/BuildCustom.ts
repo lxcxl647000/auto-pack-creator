@@ -22,7 +22,7 @@ export function beforeStartBuild(options: {
     //构建前工作
     let launcherscene = path.join(options.projectDir, "assets/scene/Launcher.fire");
     if (existsSync(launcherscene)) {
-        let launcher: Object[] = JSON.parse(readFileSync(launcherscene, { encoding: 'utf-8' }));
+        let launcher: any[] = JSON.parse(readFileSync(launcherscene, { encoding: 'utf-8' }));
         for (let i = 0, len = launcher.length; i < len; i++) {
             let obj = launcher[i];
             if (obj.hasOwnProperty('CustomPlatform')) {
@@ -36,14 +36,11 @@ export function beforeStartBuild(options: {
                 }
 
                 if (obj.hasOwnProperty("remoteConfig")) {
-                    //@ts-ignore
-                    obj['remoteConfig'] = global.remoteConfig;
+                    obj['remoteConfig'] = options.platform.remoteConfig;
                 }
                 if (obj.hasOwnProperty("bmsVersion")) {
-                    //@ts-ignore
-                    obj['bmsVersion'] = global.bmsVersion;
-                    //@ts-ignore
-                    console.log('global.bmsVersion', obj['bmsVersion'])
+                    obj['bmsVersion'] = options.platform.bmsVersion;
+                    console.log('options.platform.bmsVersion', obj['bmsVersion'])
                 }
                 writeFileSync(launcherscene, JSON.stringify(launcher, null, "\t\t"), { encoding: 'utf8' });
                 break;
@@ -67,24 +64,21 @@ export function beforeStartBuild(options: {
 
     let compressFire = path.join(options.projectDir, "settings", "ccc-png-auto-compress.json");
     if (existsSync(compressFire)) {
-        let compressfile: Object[] = JSON.parse(readFileSync(compressFire, { encoding: 'utf-8' }));
-        //@ts-ignore
-        compressfile["enabled"] = !!global.isCompress;
+        let compressfile: any = JSON.parse(readFileSync(compressFire, { encoding: 'utf-8' }));
+        compressfile["enabled"] = !!options.platform.isCompress;
         writeFileSync(compressFire, JSON.stringify(compressfile, null, "\t\t"), { encoding: 'utf8' });
     }
     let ocFire = path.join(options.projectDir, "settings", "ccc-obfuscated-code.json");
     if (existsSync(ocFire)) {
-        let ocssfile: Object[] = JSON.parse(readFileSync(ocFire, { encoding: 'utf-8' }));
-        //@ts-ignore
-        ocssfile["auto"] = !!global.isOc;
+        let ocssfile: any = JSON.parse(readFileSync(ocFire, { encoding: 'utf-8' }));
+        ocssfile["auto"] = !!options.platform.isOc;
         writeFileSync(ocFire, JSON.stringify(ocssfile, null, "\t\t"), { encoding: 'utf8' });
     }
     if (options.platformsInfo.isNative) {
         let hotSettingFire = path.join(options.projectDir, "settings", "ccc-zz-hot-update.json");
         if (existsSync(hotSettingFire)) {
             let hotSettingFile: any = JSON.parse(readFileSync(hotSettingFire, { encoding: 'utf-8' }));
-            //@ts-ignore
-            hotSettingFile["enabled"] = !!global.isHotUpdate;
+            hotSettingFile["enabled"] = !!options.platform.isHotUpdate;
             if (options.platformsInfo.hotUpdateGenerateDir) {
                 hotSettingFile["outputPath"] = options.platformsInfo.hotUpdateGenerateDir;
             }
@@ -114,8 +108,7 @@ export function beforeStartBuild(options: {
     }
 
 
-    //@ts-ignore
-    if (global.gameConfigPath && global.gameConfigPath.startsWith("svn")) {
+    if (options.platform.gameConfigPath && options.platform.gameConfigPath.startsWith("svn")) {
         processSVNAndXLSX(options, () => {
             compressConfig(options);
             callback();
@@ -138,9 +131,9 @@ function compressConfig(options: {
     platformsInfo: ChannelInfo,//渠道信息
     isDebug?: boolean,//是否是测试版本
     bmsName?: string,//强制bmsname
+    platform: BasePlatform
 }) {
-    //@ts-ignore
-    if (global.compressCfg) {
+    if (options.platform.compressCfg) {
         const configPath = path.join(options.projectDir, 'assets/resources/config');
         const outputPath = path.join(configPath, `GameJsonCfg.txt`);
         console.log("开始压缩配置")
@@ -177,9 +170,9 @@ async function processSVNAndXLSX(options: {
     platformsInfo: ChannelInfo,//渠道信息
     isDebug?: boolean,//是否是测试版本
     bmsName?: string,//强制bmsname
+    platform: BasePlatform
 }, callback: Function) {
-    //@ts-ignore
-    const configPath = global.gameConfigPath;
+    const configPath = options.platform.gameConfigPath;
 
     let dirname = PackUtil.getLastDirectoryName(configPath);
     const exportPath = path.join(options.projectDir, "settings", dirname);
@@ -217,11 +210,11 @@ export function afterBuildFinish(options: {
         outputPath = `${outputPath}\\${pl.channelInfo.platform}\\dist\\`;
     }
     //@ts-ignore
-    if(pl.curPackChannel == 'alipay' && pl.QRCodeURL){
+    if (pl.curPackChannel == 'alipay' && pl.QRCodeURL) {
         //@ts-ignore
         outputPath = `[${channelName}链接](${pl.QRCodeURL})`;
     }
-    
+
     if (pl.curPackChannel.indexOf("ios") != -1 && pl.isDebug) {
         //@ts-ignore
         outputPath = `[${channelName}链接](${pl.QRCodeURL})`;
@@ -236,25 +229,23 @@ export function afterBuildFinish(options: {
             //@ts-ignore
             version = `${version}`
         }
-        //@ts-ignore
-        else if (pl.QRCodeURL) {
-            //@ts-ignore
-            outputPath = global.isHotUpLoad ? `[热更包链接](${pl.QRCodeURL})` : `[${channelName}链接](${pl.QRCodeURL})`;
+        else if (pl['QRCodeURL']) {
+            outputPath = pl.isHotUpLoad ? `[热更包链接](${pl['QRCodeURL']})` : `[${channelName}链接](${pl['QRCodeURL']})`;
             //@ts-ignore
             version = `${version}(${pl.buildVersion})`
         } else {
             outputPath = pl.configData.apksOutput;
         }
     }
-    //@ts-ignore
-    if (pl.configData.notifyDingTalk && pl.configData.dingTalkWebHook && !global.isSkipNotify) {
+
+    if (pl.configData.notifyDingTalk && pl.configData.dingTalkWebHook && !options.platform.isSkipNotify) {
         let bot = new DingdingBot(pl.configData.dingTalkWebHook);
         let msg = `#### 游戏名字：**<font color='#1E90FF'>${gameName}</font>** \n ##### 游戏渠道：**${channelName}**\n ##### 游戏版本：**${version}** \n ##### 打包状态：**<font color='#00dd00'>完成</font>** \n ##### 资源包路径：${outputPath} \n ##### 打包时间：**${new Date().toLocaleString()}** \n`;
         let title = `${gameName}打包通知`;
         bot.pushMsgMarkdown(msg, title);
     }
-    //@ts-ignore
-    if (pl.configData.notifyFeiShuTalk && pl.configData.feiShuWebHook && !global.isSkipNotify) {
+
+    if (pl.configData.notifyFeiShuTalk && pl.configData.feiShuWebHook && !options.platform.isSkipNotify) {
         let feishubot = new FeiShuBot(pl.configData.feiShuWebHook);
         let msg =
             `游戏名字：**${gameName}**

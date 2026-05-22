@@ -6,6 +6,7 @@ import PackUtil from "../utils/PackUtil";
 import { createReadStream, existsSync } from "fs";
 import request from 'request';
 import qrcode from "qrcode-terminal";
+import { PackProject } from "../packProjects/PackProjects";
 export class IOS extends BasePlatform {
     private _iosDir: string = "";
     public isBundle: boolean = false;
@@ -20,11 +21,7 @@ export class IOS extends BasePlatform {
     public buildVersion: string = "";
     public init(option: {
         configData: any,
-        channel: string,
-        projectDir: string,
-        isDebug?: boolean,
-        forceVersion?: string,
-        desc?: string,
+        project: PackProject
     }) {
         super.init(option);
         let channelInfo: ChannelInfo = this.configData.platforms[this.curPackChannel];
@@ -49,7 +46,7 @@ export class IOS extends BasePlatform {
          */
         let boo = true;
         //@ts-ignore
-        if (!global.isSkipBuild) {
+        if (!this.skipBuild) {
             boo = await this.changeBaseInfo();
             await this.cleanProject();
             boo = await this.buildArchive();

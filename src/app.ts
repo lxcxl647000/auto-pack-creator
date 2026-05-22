@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 import { program } from "commander";
 import PackManager from "./pack/PackManager";
-let i = 2;
-let projectDir = "";
-let channel = "";
-let isdebug = false;
-let version: string | null = null!;
-let desc: string = "";
-let androidBundle: boolean = false;
-let bmsname: string = "";
-let bmsversion: string = "";
+
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '1';
 program
     .option("-p, --path <value>", "Cocos项目根目录[Path]")
@@ -34,45 +26,6 @@ program
 program.parse(process.argv);
 const options = program.opts();
 console.log(options)
-projectDir = options.path;
-channel = options.channel;
-version = options.version || "1.0.0";
-isdebug = options.debug;
-desc = typeof options.tdesc == "string" ? options.tdesc : "";
-androidBundle = options.bundle;
-bmsname = typeof options.BMSName == "string" ? options.BMSName : "";
-bmsversion = typeof options.BMSVersion == "string" ? options.BMSVersion : version as string;
-const remoteconfig = options.remoteConfig;
-const islocal = options.local;
-const compressCfg = options.config;
-const svnPath = typeof options.BMSVersion == "string" ? options.svnConfigPath : "";
-//@ts-ignore
-global.isSkipBuild = options.skip;
-//@ts-ignore
-global.isSkipNotify = options.nonotify;
-//@ts-ignore
-global.isCompress = options.compress;
-//@ts-ignore
-global.isOc = options.obfuscated;
-//@ts-ignore
-global.remoteConfig = (remoteconfig && remoteconfig.length > 0) ? remoteconfig : "";
-//@ts-ignore
-global.isPackLocal = !!islocal;
-//@ts-ignore
-global.compressCfg = !!compressCfg;
-//@ts-ignore
-global.bmsVersion = bmsversion || "";
-
-//@ts-ignore
-global.isHotUpdate = options.hotUpdate;
-//@ts-ignore
-global.isHotUpLoad = options.hotUpLoad;
-//@ts-ignore
-global.gameConfigPath = svnPath;
-
-// if (projectDir && channel) {
-//     PackManager.init(projectDir, channel, isdebug, version!, desc, androidBundle, bmsname, bmsversion);
-// }
 
 // 从第一个工程开始打包
 PackManager.ins.packIndex = 0;

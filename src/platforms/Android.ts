@@ -23,8 +23,7 @@ export class Android extends BasePlatform {
     public buildVersion: string = "";
     public async afterBuildFinish() {
         let channelInfo: ChannelInfo = this.configData.platforms[this.curPackChannel];
-        //@ts-ignore
-        if (global.isHotUpLoad) {
+        if (this.isHotUpLoad) {
             let hotSettingFire: any = path.join(this.projectDir, "settings", "ccc-zz-hot-update.json");
             if (existsSync(hotSettingFire) && channelInfo.remoteHotUpdateDir != "") {
                 console.log('upload hotupdate cdn res start');

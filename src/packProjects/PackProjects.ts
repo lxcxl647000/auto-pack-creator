@@ -1,4 +1,4 @@
-export interface PackProjects {
+export interface PackProject {
     name: string,
     path: string,// Cocos项目根目录
     channel: string,// 指定打包对应渠道名称
@@ -18,9 +18,10 @@ export interface PackProjects {
     bundle?: boolean,// 是否打包App Bundle 安卓需要
     hotUpdate?: boolean,// 是否需要热更包配置
     hotUpLoad?: boolean// 是否需要上传热更包配置
+    upload?: boolean// 是否需要上传
 }
 
-export const PackArr: PackProjects[] = [
+export const PackArr: PackProject[] = [
     // {
     //     name: "TemplateProject",
     //     path: "D:/cocos_project/TemplateProject",
@@ -40,5 +41,7 @@ export const PackArr: PackProjects[] = [
         name: "萌宠连连看",
         path: "D:/cocos_project/Pet_Line",
         channel: "taobao-mini-game",
+        upload: false,
+        skip: false
     },
 ];

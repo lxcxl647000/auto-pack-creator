@@ -5,6 +5,7 @@ import { afterBuildFinish, beforeStartBuild } from '../build-custom/BuildCustom'
 import PackUtil from '../utils/PackUtil';
 import { ChannelInfo, IPackConfig } from './PlatformConfig';
 import PackManager from '../pack/PackManager';
+import { PackProject } from '../packProjects/PackProjects';
 export class BasePlatform {
     public configData: IPackConfig = null!;
     public channelInfo: ChannelInfo = null!;
@@ -18,31 +19,53 @@ export class BasePlatform {
     public desc: string | null = null;
     public bmsName: string = "";
     public isEngine3: boolean = false;
+    public upload: boolean = false;
+    public skipBuild: boolean = false;
+
+    public isSkipNotify: boolean = false;
+    public isCompress: boolean = false;
+    public isOc: boolean = false;
+    public remoteConfig: string = "";
+    public isPackLocal: boolean = false;
+    public compressCfg: boolean = false;
+    public bmsVersion: string = "";
+    public isHotUpdate: boolean = false;
+    public isHotUpLoad: boolean = false;
+    public gameConfigPath: string = "";
+
     public constructor() {
     }
     public init(options: {
         configData: IPackConfig,
-        channel: string,
-        projectDir: string,
-        isDebug?: boolean,
-        forceVersion?: string,
-        desc?: string,
+        project: PackProject,
     }) {
+        this.gameConfigPath = options.project.svnConfigPath || "";
+        this.isHotUpdate = options.project.hotUpdate || false;
+        this.isHotUpLoad = options.project.hotUpLoad || false;
+        this.bmsVersion = options.project.BMSVersion || "";
+        this.compressCfg = options.project.config || false;
+        this.isPackLocal = options.project.local || false;
+        this.remoteConfig = (options.project.remoteConfig && options.project.remoteConfig.length > 0) ? options.project.remoteConfig : "";
+        this.isOc = options.project.obfuscated || false;
+        this.isCompress = options.project.compress || false;
+        this.isSkipNotify = options.project.nonotify || false;
+        this.skipBuild = options.project.skip || false;
+        this.upload = options.project.upload || false;
         this.configData = options.configData;
         this.enginePath = options.configData.enginePath;
-        this.projectDir = options.projectDir;
-        this.curPackChannel = options.channel;
+        this.projectDir = options.project.path;
+        this.curPackChannel = options.project.channel;
         this.channelInfo = this.configData.platforms[this.curPackChannel];
         let outputpath = this.configData.outputDir;
-        this.desc = options.desc!;
-        this.isDebug = options.isDebug!;
+        this.desc = options.project.tdesc || "";
+        this.isDebug = options.project.debug || false;
         this.outputPath = path.join(outputpath, this.channelInfo.buildPath);
         if (PackUtil.compareVersion(this.configData.engineVer, "3.0.0") >= 0) {
             this.isEngine3 = true;
         }
         PackUtil.mkdirSync(this.outputPath);//没有对应输出目录则创建目录
-        if (options.forceVersion) {
-            this.version = options.forceVersion;
+        if (options.project.version) {
+            this.version = options.project.version || "0.0.1";
         } else {
             this.checkNewVersion();
         }
@@ -57,8 +80,7 @@ export class BasePlatform {
         //开始构建前
         await this.beforeStartBuild();
         let boo = true;
-        //@ts-ignore
-        if (!global.isSkipBuild) {
+        if (!this.skipBuild) {
             boo = await this.build();
         }
         if (channelInfo.customTemplate) {

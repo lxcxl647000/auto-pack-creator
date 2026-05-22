@@ -62,7 +62,7 @@ keyStoreInfo: &keyStoreInfo
 
 # 注：因为有些相关信息参数命令行构建是没有提供修改的，需要额外修改，最好本地自行先用编辑器打包一次
 basePlatforms: &basePlatforms
-    version: "1.0.0"
+    version: "0.0.1"
     isNative: false
     md5Cache: true
     buildPath: "build"
@@ -104,7 +104,7 @@ platforms:
     vivo: &vivo
         <<: *oppo
         platform: "qgame"
-        version: "1.0.0"
+        version: "0.0.1"
 
     xiaomi:
         <<: *oppo
@@ -117,7 +117,7 @@ platforms:
         <<: *basePlatforms
         platform: "cocos-runtime"
         toolsDir: "E:/kwaigame"
-        version: "1.0.0"
+        version: "0.0.1"
 
     #百度小游戏
     baidu:
@@ -126,7 +126,7 @@ platforms:
         #登录token 百度开发者工具-关于-复制秘钥可获得
         privatePath: ""
         remoteDir: ""
-        version: "1.0.0"
+        version: "0.0.1"
 
     wechatgame:
         <<: *basePlatforms

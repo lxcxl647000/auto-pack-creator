@@ -7,8 +7,7 @@ export class WebMobile extends BasePlatform {
     public async afterBuildFinish() {
         let channelInfo: ChannelInfo = this.configData.platforms[this.curPackChannel];
         let remotepath = path.join(this.outputPath, channelInfo.platform);
-        //@ts-ignore
-        if (existsSync(remotepath) && channelInfo.remoteDir != "" && !global.isPackLocal) {
+        if (existsSync(remotepath) && channelInfo.remoteDir != "" && !this.isPackLocal) {
             console.log('upload cdn res start');
             let cdnrespath = channelInfo.remoteDir;
             PackUtil.mkdirSync(channelInfo.remoteDir);
@@ -17,11 +16,10 @@ export class WebMobile extends BasePlatform {
             PackUtil.uploadCDNRes(cdnrespath);
             console.log('upload cdn res finish');
         }
-        //@ts-ignore
-        if (global.isPackLocal) {
-            
+        if (this.isPackLocal) {
+
             let local = path.join(this.outputPath, channelInfo.platform + "local");
-            console.log('move files start',local)
+            console.log('move files start', local)
             // if (existsSync(local)) {
             //     PackUtil.removeFiles(local);
             // }
@@ -36,7 +34,7 @@ export class WebMobile extends BasePlatform {
             console.log('move files end')
             if (channelInfo.localPath) {
                 channelInfo.serverPath = channelInfo.localPath;
-            }else{
+            } else {
                 channelInfo.serverPath = "http://192.168.20.58:5500/"
             }
         }

@@ -4,8 +4,7 @@ import yaml from 'yamljs';
 import { BasePlatform } from '../platforms/BasePlatform';
 import { IPackConfig, supportPlatform } from '../platforms/PlatformConfig';
 import PackUtil from '../utils/PackUtil';
-import exp from 'constants';
-import { PackArr, PackProjects } from '../packProjects/PackProjects';
+import { PackArr, PackProject } from '../packProjects/PackProjects';
 
 class _Pack {
     public configData: IPackConfig = null!;
@@ -23,7 +22,15 @@ class _Pack {
      * @param packChannel 打包渠道
      * @returns 
      */
-    public init(projectDir: string, packChannel: string, isdebug: boolean = false, version?: string, desc?: string, androidBundle: boolean = false, bmsname: string = "", bmsversion: string = "") {
+    public init(project: PackProject) {
+        let projectDir = project.path;
+        let packChannel = project.channel;
+        let version = project.version || "0.0.1";
+        let isdebug = project.debug || false;
+        let androidBundle = project.bundle;
+        let bmsname = typeof project.BMSName == "string" ? project.BMSName : "";
+        let bmsversion = typeof project.BMSVersion == "string" ? project.BMSVersion : version as string;
+
         this.isDebug = isdebug;
         let configyml = PackUtil.isIOS ? "pack.configios.yml" : "pack.config.yml";
         let configPath = path.join(projectDir, "settings", configyml);
@@ -47,7 +54,7 @@ class _Pack {
         this.checkCustomEngine();
         this.curPlatform = new scripts();
         (<any>this.curPlatform).bmsName = bmsname;
-        this.curPlatform.init({ channel: packChannel, configData: this.configData, isDebug: this.isDebug, projectDir, forceVersion: version, desc });
+        this.curPlatform.init({ configData: this.configData, project: project });
         if (this.curPlatform.channelInfo.isNative) {
             console.log("isBundle = ", androidBundle, "bmsname = ", bmsname, "bmsversion = ", bmsversion);
             (<any>this.curPlatform).isBundle = androidBundle;
@@ -100,6 +107,13 @@ export default class PackManager {
     public static get ins(): PackManager {
         if (!this._mgr) {
             this._mgr = new PackManager();
+
+            for (let i = 0; i < PackArr.length; i++) {
+                let pack = PackArr[i];
+                if (pack.upload) {
+                    this._mgr._totalUploads++;
+                }
+            }
         }
         return this._mgr;
     }
@@ -112,6 +126,8 @@ export default class PackManager {
         if (index === 0) {// 从0开始的时候把数据清空
             this._successPackProjects = [];
             this._failPackProjects = [];
+            this._successUploads = [];
+            this._failUploads = [];
         }
         this._packIndex = index;
         this._doPack();
@@ -119,28 +135,43 @@ export default class PackManager {
 
     private _successPackProjects: string[] = [];
     private _failPackProjects: string[] = [];
-
     public addSuccessProject(name: string) {
         this._successPackProjects.push(name);
     }
-
     public addFailProject(name: string) {
         this._failPackProjects.push(name);
+    }
+
+    private _successUploads: string[] = [];
+    private _failUploads: string[] = [];
+    private _totalUploads = 0;
+    public addSuccessUpload(name: string) {
+        this._successUploads.push(name);
+        this._checkFinishUpload();
+    }
+    public addFailUpload(name: string) {
+        this._failUploads.push(name);
+        this._checkFinishUpload();
+    }
+    private _checkFinishUpload() {
+        if (this._successUploads.length + this._failUploads.length === this._totalUploads) {
+            console.log(`--------------total upload ${this._totalUploads}  success : ${this._successUploads.length}  fail : ${this._failUploads.length}--------------------`);
+            console.log("success upload: ");
+            for (let i = 0; i < this._successUploads.length; i++) {
+                console.log(this._successUploads[i]);
+            }
+            console.log("fail upload: ");
+            for (let i = 0; i < this._failUploads.length; i++) {
+                console.log(this._failUploads[i]);
+            }
+        }
     }
 
     private _doPack() {
         if (this._packIndex < PackArr.length) {
             let project = PackArr[this._packIndex];
-            let projectDir = project.path;
-            let channel = project.channel;
-            let version = project.version || "1.0.0";
-            let isdebug = project.debug;
-            let desc = typeof project.tdesc == "string" ? project.tdesc : "";
-            let androidBundle = project.bundle;
-            let bmsname = typeof project.BMSName == "string" ? project.BMSName : "";
-            let bmsversion = typeof project.BMSVersion == "string" ? project.BMSVersion : version as string;
-            if (projectDir && channel) {
-                new _Pack().init(projectDir, channel, isdebug, version!, desc, androidBundle, bmsname, bmsversion);
+            if (project.path && project.channel) {
+                new _Pack().init(project);
             }
         }
         else {
