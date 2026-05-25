@@ -206,6 +206,7 @@ export function afterBuildFinish(options: {
     let channelName = channelToName[pl.curPackChannel] || pl.channelInfo.platform;
     let gameName = pl.channelInfo.gameName ? pl.channelInfo.gameName : pl.configData.gameName;
     let outputPath = AutoUploadPlatform[pl.curPackChannel] ? (channelName + "后台") : (pl.curPackChannel == 'web_mobile' || pl.curPackChannel == 'web_desktop' ? `[${channelName}链接](${pl.channelInfo.serverPath}?t=${Date.now()})` : pl.outputPath.substr(2));
+    outputPath = pl.curPackChannel == 'web_mobile' || pl.curPackChannel == 'web_desktop' ? `[${channelName}链接](${pl.channelInfo.serverPath}?t=${Date.now()})` : path.join(pl.outputPath, pl.curPackChannel);
     if (pl.curPackChannel == 'oppo' || pl.curPackChannel == 'vivo' || pl.curPackChannel == 'xiaomi' || pl.curPackChannel == 'huawei') {
         outputPath = `${outputPath}\\${pl.channelInfo.platform}\\dist\\`;
     }
@@ -238,12 +239,13 @@ export function afterBuildFinish(options: {
         }
     }
 
-    if (pl.configData.notifyDingTalk && pl.configData.dingTalkWebHook && !options.platform.isSkipNotify) {
+    if (!pl.skipBuild && pl.configData.notifyDingTalk && pl.configData.dingTalkWebHook && !options.platform.isSkipNotify) {
         let bot = new DingdingBot(pl.configData.dingTalkWebHook);
-        let msg = `#### 游戏名字：**<font color='#1E90FF'>${gameName}</font>** \n ##### 游戏渠道：**${channelName}**\n ##### 游戏版本：**${version}** \n ##### 打包状态：**<font color='#00dd00'>完成</font>** \n ##### 资源包路径：${outputPath} \n ##### 打包时间：**${new Date().toLocaleString()}** \n`;
-        let title = `${gameName}打包通知`;
+        let msg = `#### **<font color='#e61a1a'>${pl.configData.dingTalkCustomContent_pack}</font>** \n #### 游戏名字：**<font color='#1E90FF'>${gameName}</font>** \n ##### 游戏渠道：**${channelName}**\n ##### 状态：**<font color='#00dd00'>打包完成</font>** \n ##### 资源包路径：${outputPath} \n ##### 打包时间：**${new Date().toLocaleString()}** \n`;
+        let title = `${gameName}`;
         bot.pushMsgMarkdown(msg, title);
     }
+
 
     if (pl.configData.notifyFeiShuTalk && pl.configData.feiShuWebHook && !options.platform.isSkipNotify) {
         let feishubot = new FeiShuBot(pl.configData.feiShuWebHook);

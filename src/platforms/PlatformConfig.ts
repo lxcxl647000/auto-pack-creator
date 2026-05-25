@@ -219,6 +219,8 @@ export interface IPackConfig {
     apksOutput: string,//输出apk/ipa目录
     notifyDingTalk?: boolean,//是否通知钉钉
     dingTalkWebHook?: string,//钉钉webhook
+    dingTalkCustomContent_pack?: string,//钉钉自定义内容
+    dingTalkCustomContent_upload?: string,//钉钉自定义内容
     notifyFeiShuTalk?: boolean,//是否通知飞书
     feiShuWebHook?: string,//飞书webhook
     logReportUrl?: string,//日志上报url

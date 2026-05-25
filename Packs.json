@@ -1,0 +1,34 @@
+{
+    "packs": [
+        {
+            "name": "TemplateProject",
+            "path": "D:/cocos_project/TemplateProject",
+            "channel": "taobao-mini-game",
+            "needAutoPack": false
+        },
+        {
+            "name": "开心抓猫猫",
+            "path": "D:/cocos_project/HappyPullCat",
+            "channel": "taobao-mini-game",
+            "upload": false,
+            "skip": false,
+            "needAutoPack": true
+        },
+        {
+            "name": "养个招财猫",
+            "path": "D:/cocos_project/Cat",
+            "channel": "taobao-mini-game",
+            "upload": false,
+            "skip": false,
+            "needAutoPack": true
+        },
+        {
+            "name": "萌宠连连看",
+            "path": "D:/cocos_project/Pet_Line",
+            "channel": "taobao-mini-game",
+            "upload": false,
+            "skip": false,
+            "needAutoPack": true
+        }
+    ]
+}

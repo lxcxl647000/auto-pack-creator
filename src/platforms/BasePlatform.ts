@@ -4,8 +4,7 @@ import path from 'path';
 import { afterBuildFinish, beforeStartBuild } from '../build-custom/BuildCustom';
 import PackUtil from '../utils/PackUtil';
 import { ChannelInfo, IPackConfig } from './PlatformConfig';
-import PackManager from '../pack/PackManager';
-import { PackProject } from '../packProjects/PackProjects';
+import PackManager, { PackProject } from '../pack/PackManager';
 export class BasePlatform {
     public configData: IPackConfig = null!;
     public channelInfo: ChannelInfo = null!;

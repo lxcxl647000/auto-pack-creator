@@ -4,7 +4,30 @@ import yaml from 'yamljs';
 import { BasePlatform } from '../platforms/BasePlatform';
 import { IPackConfig, supportPlatform } from '../platforms/PlatformConfig';
 import PackUtil from '../utils/PackUtil';
-import { PackArr, PackProject } from '../packProjects/PackProjects';
+
+export interface PackProject {
+    name: string,
+    path: string,// Cocos项目根目录
+    channel: string,// 指定打包对应渠道名称
+    version?: string,// 设置打包的版本号
+    debug?: boolean,// 是否为测试包true:不是测试包,false:测试包
+    skip?: boolean,// 是否跳过cocos构建工程，直接使用导出工程
+    nonotify?: boolean,// 是否跳过钉钉通知
+    tdesc?: string,// 小游戏后台上传描述，字节微信等
+    BMSName?: string,// 实名控制的BMSName
+    BMSVersion?: string,// 实名控制的BMSVersion
+    compress?: boolean,// 是否压缩资源
+    obfuscated?: boolean,// 是否混淆
+    remoteConfig?: string,// 远程配置路径
+    local?: boolean,// 是否本地
+    config?: boolean,// 是否压缩配置
+    svnConfigPath?: string,// 配置表
+    bundle?: boolean,// 是否打包App Bundle 安卓需要
+    hotUpdate?: boolean,// 是否需要热更包配置
+    hotUpLoad?: boolean// 是否需要上传热更包配置
+    upload?: boolean// 是否需要上传
+    needAutoPack?: boolean// 是否需要进行自动构建上传
+}
 
 class _Pack {
     public configData: IPackConfig = null!;
@@ -107,15 +130,22 @@ export default class PackManager {
     public static get ins(): PackManager {
         if (!this._mgr) {
             this._mgr = new PackManager();
-
-            for (let i = 0; i < PackArr.length; i++) {
-                let pack = PackArr[i];
-                if (pack.upload) {
-                    this._mgr._totalUploads++;
-                }
-            }
+            this._mgr.getPackProjectDatas();
         }
         return this._mgr;
+    }
+
+    private _oneByOne = false;
+    public set oneByOne(oneByOne: boolean) {
+        this._oneByOne = oneByOne;
+    }
+    public get oneByOne() {
+        return this._oneByOne;
+    }
+
+    private _packs: PackProject[] = [];
+    public get packs() {
+        return this._packs;
     }
 
     private _packIndex = 0;
@@ -130,7 +160,13 @@ export default class PackManager {
             this._failUploads = [];
         }
         this._packIndex = index;
-        this._doPack();
+
+        if (this._oneByOne) {
+            this._packOneByOne();
+        }
+        else {
+            this._checkFinishPack();
+        }
     }
 
     private _successPackProjects: string[] = [];
@@ -156,36 +192,108 @@ export default class PackManager {
     private _checkFinishUpload() {
         if (this._successUploads.length + this._failUploads.length === this._totalUploads) {
             console.log(`--------------total upload ${this._totalUploads}  success : ${this._successUploads.length}  fail : ${this._failUploads.length}--------------------`);
-            console.log("success upload: ");
+            let successStr = 'success upload:' + '\n';
+            let failStr = 'fail upload:' + '\n';
             for (let i = 0; i < this._successUploads.length; i++) {
-                console.log(this._successUploads[i]);
+                successStr += this._successUploads[i] + '\n';
             }
-            console.log("fail upload: ");
+            console.log(successStr);
+
             for (let i = 0; i < this._failUploads.length; i++) {
-                console.log(this._failUploads[i]);
+                failStr += this._failUploads[i] + '\n';
             }
+            console.log(failStr);
         }
     }
 
-    private _doPack() {
-        if (this._packIndex < PackArr.length) {
-            let project = PackArr[this._packIndex];
+    // 一个打完打下一个
+    private _packOneByOne() {
+        if (!this._oneByOne) {
+            console.log("oneByOne is false,不能使用这个方法--------------------");
+            return;
+        }
+        if (this._packIndex < PackManager.ins.packs.length) {
+            let project = PackManager.ins.packs[this._packIndex];
             if (project.path && project.channel) {
                 new _Pack().init(project);
             }
         }
         else {
-            console.log(`--------------total build projects ${PackArr.length}  success : ${this._successPackProjects.length}  fail : ${this._failPackProjects.length}--------------------`);
+            console.log(`--------------total build projects ${PackManager.ins.packs.length}  success : ${this._successPackProjects.length}  fail : ${this._failPackProjects.length}--------------------`);
             console.log("--------------build finish all projects--------------------");
-            console.log("success pack projects: ");
+            let successStr = 'success pack projects:' + '\n';
+            let failStr = 'fail pack projects:' + '\n';
             for (let i = 0; i < this._successPackProjects.length; i++) {
-                console.log(this._successPackProjects[i]);
+                successStr += this._successPackProjects[i] + '\n';
             }
-            console.log("fail pack projects: ");
+            console.log(successStr);
             for (let i = 0; i < this._failPackProjects.length; i++) {
-                console.log(this._failPackProjects[i]);
+                failStr += this._failPackProjects[i] + '\n';
             }
+            console.log(failStr);
             console.log("--------------build finish all projects--------------------");
+        }
+    }
+
+    private _checkFinishPack() {
+        if (this._packIndex >= PackManager.ins.packs.length) {
+            console.log(`--------------total build projects ${PackManager.ins.packs.length}  success : ${this._successPackProjects.length}  fail : ${this._failPackProjects.length}--------------------`);
+            console.log("--------------build finish all projects--------------------");
+            let successStr = 'success pack projects:' + '\n';
+            let failStr = 'fail pack projects:' + '\n';
+            for (let i = 0; i < this._successPackProjects.length; i++) {
+                successStr += this._successPackProjects[i] + '\n';
+            }
+            console.log(successStr);
+            for (let i = 0; i < this._failPackProjects.length; i++) {
+                failStr += this._failPackProjects[i] + '\n';
+            }
+            console.log(failStr);
+            console.log("--------------build finish all projects--------------------");
+        }
+    }
+
+    // 直接打，不用等上一个打完
+    public doPack(index: number) {
+        if (this._oneByOne) {
+            console.log("oneByOne is true,不能使用这个方法--------------------");
+            return;
+        }
+        let project = PackManager.ins.packs[index];
+        if (project.path && project.channel) {
+            new _Pack().init(project);
+        }
+    }
+
+    /**
+     * 获取要打包的项目
+     */
+    public getPackProjectDatas() {
+        this._packs = [];
+        let pathPacks = './Packs.json';
+        let exist = fs.existsSync(pathPacks);
+        if (exist) {
+            let str = fs.readFileSync(pathPacks, 'utf-8');
+            if (str !== '') {
+                let datas = JSON.parse(str);
+                if (datas.packs) {
+                    for (let i = 0; i < datas.packs.length; i++) {
+                        let data: PackProject = datas.packs[i];
+                        if (data.needAutoPack) {
+                            this._packs.push(data);
+                        }
+                    }
+                }
+            }
+            for (let i = 0; i < this._packs.length; i++) {
+                let pack = this._packs[i];
+                if (pack.upload) {
+                    PackManager.ins._totalUploads++;
+                }
+            }
+        }
+        else {
+            console.log("Packs.json不存在");
         }
     }
 }

@@ -6,7 +6,7 @@ import PackUtil from "../utils/PackUtil";
 import { createReadStream, existsSync } from "fs";
 import request from 'request';
 import qrcode from "qrcode-terminal";
-import { PackProject } from "../packProjects/PackProjects";
+import { PackProject } from "../pack/PackManager";
 export class IOS extends BasePlatform {
     private _iosDir: string = "";
     public isBundle: boolean = false;
