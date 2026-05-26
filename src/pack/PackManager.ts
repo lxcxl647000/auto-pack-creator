@@ -130,7 +130,6 @@ export default class PackManager {
     public static get ins(): PackManager {
         if (!this._mgr) {
             this._mgr = new PackManager();
-            this._mgr.getPackProjectDatas();
         }
         return this._mgr;
     }
@@ -146,6 +145,22 @@ export default class PackManager {
     private _packs: PackProject[] = [];
     public get packs() {
         return this._packs;
+    }
+    public set packs(packs: PackProject[]) {
+        this._packs = [];
+        for (let i = 0; i < packs.length; i++) {
+            let data: PackProject = packs[i];
+            if (data.needAutoPack) {
+                this._packs.push(data);
+            }
+        }
+        this._totalUploads = 0;
+        for (let i = 0; i < this._packs.length; i++) {
+            let pack = this._packs[i];
+            if (pack.upload) {
+                this._totalUploads++;
+            }
+        }
     }
 
     private _packIndex = 0;
@@ -288,7 +303,7 @@ export default class PackManager {
             for (let i = 0; i < this._packs.length; i++) {
                 let pack = this._packs[i];
                 if (pack.upload) {
-                    PackManager.ins._totalUploads++;
+                    this._totalUploads++;
                 }
             }
         }
